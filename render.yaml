@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: nihd-cameroon
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+    disk:
+      name: nihd-data
+      mountPath: /opt/render/project/src/instance
+      sizeGB: 1

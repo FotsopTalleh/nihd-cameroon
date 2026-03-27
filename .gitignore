@@ -1,0 +1,43 @@
+# National Internet Health Dashboard — .gitignore
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Database (regenerated on startup)
+instance/
+*.db
+*.sqlite
+
+# Generated download files
+downloads/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/

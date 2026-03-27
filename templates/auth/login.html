@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Login | National Internet Health Dashboard{% endblock %}
+{% block meta_desc %}Login to your NIHD account to download internet performance data reports.{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card-wrapper">
+
+    <!-- Brand Header -->
+    <div class="auth-brand text-center mb-4">
+      <div class="auth-brand-icon">
+        <i class="bi bi-broadcast"></i>
+      </div>
+      <h2 class="auth-brand-title">National Internet Health Dashboard</h2>
+      <p class="auth-brand-sub">Republic of Cameroon</p>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <h3><i class="bi bi-box-arrow-in-right me-2"></i>Sign In</h3>
+        <p class="text-muted small mb-0">Access your account to download data reports</p>
+      </div>
+
+      <div class="auth-card-body">
+        <form method="POST" action="{{ url_for('auth.login') }}" id="loginForm" novalidate>
+          <div class="mb-3">
+            <label for="email" class="form-label fw-semibold">Email Address</label>
+            <div class="input-group input-group-auth">
+              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+              <input type="email" id="email" name="email" class="form-control"
+                     placeholder="you@example.com"
+                     value="{{ request.form.get('email', '') }}"
+                     required autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <label for="password" class="form-label fw-semibold mb-0">Password</label>
+            </div>
+            <div class="input-group input-group-auth mt-1">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" id="password" name="password" class="form-control"
+                     placeholder="••••••••" required autocomplete="current-password" />
+              <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password', this)">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-4 form-check">
+            <input type="checkbox" class="form-check-input" id="remember" name="remember" />
+            <label class="form-check-label text-muted" for="remember">Remember me for 8 hours</label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-auth w-100" id="loginBtn">
+            <span class="btn-text"><i class="bi bi-box-arrow-in-right me-2"></i>Sign In</span>
+            <span class="btn-spinner d-none">
+              <span class="spinner-border spinner-border-sm me-2"></span>Signing in...
+            </span>
+          </button>
+        </form>
+
+        <div class="auth-divider"><span>or</span></div>
+
+        <div class="text-center">
+          <p class="text-muted mb-1">Don't have an account?</p>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-auth w-100">
+            <i class="bi bi-person-plus me-2"></i>Create Free Account
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-muted small mt-3">
+      Public dashboard access does not require login.
+      <a href="{{ url_for('dashboard.index') }}">← Return to Dashboard</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePassword(fieldId, btn) {
+  const field = document.getElementById(fieldId);
+  const icon = btn.querySelector('i');
+  if (field.type === 'password') {
+    field.type = 'text';
+    icon.classList.replace('bi-eye', 'bi-eye-slash');
+  } else {
+    field.type = 'password';
+    icon.classList.replace('bi-eye-slash', 'bi-eye');
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', function() {
+  document.querySelector('.btn-text').classList.add('d-none');
+  document.querySelector('.btn-spinner').classList.remove('d-none');
+});
+</script>
+{% endblock %}

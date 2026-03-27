@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+{% block title %}National Internet Health Dashboard – Cameroon Overview{% endblock %}
+
+{% block content %}
+<!-- ====================== HERO / KPI SECTION ====================== -->
+<section class="hero-section">
+  <div class="container-fluid px-4">
+    <div class="row align-items-center mb-4">
+      <div class="col-md-8">
+        <h1 class="hero-title">National Internet Health Overview</h1>
+        <p class="hero-sub">
+          Real-time monitoring of internet performance across Cameroon's 10 regions.
+          Data collected every 2 hours from distributed probe agents.
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end">
+        <div class="live-indicator">
+          <span class="live-dot"></span>
+          <span>Live Data</span>
+          <span class="text-muted ms-2 small" id="lastUpdated">Updating...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3" id="kpiCards">
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-latency">
+          <div class="kpi-icon"><i class="bi bi-speedometer2"></i></div>
+          <div class="kpi-value" id="kpiLatency">--</div>
+          <div class="kpi-label">Avg Latency</div>
+          <div class="kpi-unit">milliseconds</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-uptime">
+          <div class="kpi-icon"><i class="bi bi-activity"></i></div>
+          <div class="kpi-value" id="kpiUptime">--</div>
+          <div class="kpi-label">Network Uptime</div>
+          <div class="kpi-unit">percent</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-loss">
+          <div class="kpi-icon"><i class="bi bi-reception-0"></i></div>
+          <div class="kpi-value" id="kpiLoss">--</div>
+          <div class="kpi-label">Packet Loss</div>
+          <div class="kpi-unit">percent</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-alerts">
+          <div class="kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
+          <div class="kpi-value" id="kpiAlerts">{{ active_alerts }}</div>
+          <div class="kpi-label">Active Incidents</div>
+          <div class="kpi-unit">unresolved alerts</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== MAIN CONTENT ====================== -->
+<div class="container-fluid px-4 py-4">
+  <div class="row g-4">
+
+    <!-- ===== LEFT COL: Charts ===== -->
+    <div class="col-lg-8">
+
+      <!-- Latency over time chart -->
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <div>
+            <h5 class="card-title-nihd"><i class="bi bi-graph-up me-2"></i>National Latency Trend (Last 12 Hours)</h5>
+            <p class="card-subtitle-nihd">Average latency aggregated across all regions</p>
+          </div>
+          <div class="chart-actions">
+            <button class="btn btn-sm btn-outline-primary" onclick="refreshData()">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="latencyChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Uptime + Packet Loss chart -->
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <div>
+            <h5 class="card-title-nihd"><i class="bi bi-bar-chart me-2"></i>Uptime &amp; Packet Loss</h5>
+            <p class="card-subtitle-nihd">Combined view of uptime percentage and packet loss rate</p>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="uptimeChart"></canvas>
+        </div>
+      </div>
+
+      <!-- ISP Comparison Table -->
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <div>
+            <h5 class="card-title-nihd"><i class="bi bi-building me-2"></i>ISP Performance Comparison</h5>
+            <p class="card-subtitle-nihd">Average performance metrics per Internet Service Provider (last 24h)</p>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table nihd-table" id="ispTable">
+            <thead>
+              <tr>
+                <th>ISP Name</th>
+                <th>Avg Latency</th>
+                <th>Avg Uptime</th>
+                <th>Packet Loss</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="ispTableBody">
+              <tr><td colspan="5" class="text-center text-muted py-3">Loading ISP data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== RIGHT COL: Map + Info ===== -->
+    <div class="col-lg-4">
+
+      <!-- Dashboard Purpose Card -->
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-info-circle me-2"></i>Dashboard Purpose</h5>
+        </div>
+        <div class="p-3 pt-0">
+          <p class="text-muted small mb-3">
+            This dashboard provides real-time insight into national internet performance.
+            It monitors latency, uptime, stability, and outages across major Cameroon regions.
+          </p>
+          <div class="purpose-tags">
+            <span class="tag-pill tag-blue">Real-time Data</span>
+            <span class="tag-pill tag-green">10 Regions</span>
+            <span class="tag-pill tag-orange">4 ISPs</span>
+            <span class="tag-pill tag-purple">Open Data</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cameroon Regions Status -->
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-map me-2"></i>Region Status</h5>
+        </div>
+        <div class="region-list" id="regionList">
+          {% if region_stats %}
+            {% for r in region_stats %}
+            <a href="{{ url_for('dashboard.regions', region=r.name) }}" class="region-item">
+              <div class="region-info">
+                <div class="region-dot {% if r.status == 'Normal' %}dot-green{% else %}dot-red{% endif %}"></div>
+                <div>
+                  <div class="region-name">{{ r.name }}</div>
+                  <div class="region-meta">{{ r.avg_latency }}ms · {{ r.avg_uptime }}% uptime</div>
+                </div>
+              </div>
+              <div class="region-badge">
+                <span class="status-badge {% if r.status == 'Normal' %}badge-normal{% else %}badge-degraded{% endif %}">
+                  {{ r.status }}
+                </span>
+                <i class="bi bi-chevron-right ms-2 text-muted"></i>
+              </div>
+            </a>
+            {% endfor %}
+          {% else %}
+            <p class="text-center text-muted py-3">Loading region data...</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Download Card -->
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-download me-2"></i>Export Data</h5>
+        </div>
+        <div class="p-3 pt-0">
+          {% if current_user.is_authenticated %}
+            <p class="text-muted small mb-3">Download the complete dataset for analysis.</p>
+            <div class="d-grid gap-2">
+              <a href="{{ url_for('download.download_csv') }}" class="btn btn-download-csv">
+                <i class="bi bi-filetype-csv me-2"></i>Download CSV (All Regions)
+              </a>
+              <a href="{{ url_for('download.download_pdf') }}" class="btn btn-download-pdf">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF Report
+              </a>
+              <a href="{{ url_for('download.my_downloads') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-clock-history me-2"></i>View My Downloads
+              </a>
+            </div>
+          {% else %}
+            <div class="download-locked text-center py-3">
+              <i class="bi bi-lock-fill fs-2 text-muted mb-2 d-block"></i>
+              <p class="text-muted small mb-3">Login required to download data reports.</p>
+              <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm me-2">
+                <i class="bi bi-box-arrow-in-right me-1"></i>Login
+              </a>
+              <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-person-plus me-1"></i>Register
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let latencyChart, uptimeChart;
+const liveLatencyData = { labels: [], data: [] };
+const MAX_LIVE_POINTS = 20;  // keep last 20 probe readings on charts
+
+// ─── WebSocket Live Updates ──────────────────────────────────────────
+socket.on('kpi_update', function(data) {
+  animateKpi('kpiLatency', data.avg_latency, 'ms');
+  animateKpi('kpiUptime',  data.avg_uptime,  '%');
+  animateKpi('kpiLoss',    data.avg_packet_loss, '%');
+  document.getElementById('kpiAlerts').textContent = data.active_alerts;
+  document.getElementById('lastUpdated').textContent = data.timestamp;
+
+  colorKpi('kpiLatency', data.avg_latency, 50, 100);
+  colorKpiReverse('kpiUptime', data.avg_uptime, 99, 95);
+  colorKpi('kpiLoss', data.avg_packet_loss, 1, 3);
+
+  // Append to live chart
+  liveLatencyData.labels.push(data.timestamp);
+  liveLatencyData.data.push(data.avg_latency);
+  if (liveLatencyData.labels.length > MAX_LIVE_POINTS) {
+    liveLatencyData.labels.shift();
+    liveLatencyData.data.shift();
+  }
+  if (latencyChart) {
+    latencyChart.data.labels = [...liveLatencyData.labels];
+    latencyChart.data.datasets[0].data = [...liveLatencyData.data];
+    latencyChart.update('active');
+  }
+});
+
+socket.on('region_update', function(regions) {
+  updateRegionList(regions);
+  loadIspData();  // refresh ISP table
+});
+
+// ─── KPI Helpers ─────────────────────────────────────────────────────
+function animateKpi(elemId, targetVal, suffix) {
+  const el = document.getElementById(elemId);
+  const startVal = parseFloat(el.textContent) || 0;
+  const duration = 600;
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const cur = startVal + (targetVal - startVal) * ease;
+    el.textContent = cur.toFixed(cur < 10 ? 2 : 1) + suffix;
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function colorKpi(elemId, val, warnThresh, critThresh) {
+  const card = document.getElementById(elemId).closest('.kpi-card');
+  card.classList.remove('kpi-good','kpi-warn','kpi-bad');
+  if (val <= warnThresh) card.classList.add('kpi-good');
+  else if (val <= critThresh) card.classList.add('kpi-warn');
+  else card.classList.add('kpi-bad');
+}
+
+function colorKpiReverse(elemId, val, goodThresh, warnThresh) {
+  const card = document.getElementById(elemId).closest('.kpi-card');
+  card.classList.remove('kpi-good','kpi-warn','kpi-bad');
+  if (val >= goodThresh) card.classList.add('kpi-good');
+  else if (val >= warnThresh) card.classList.add('kpi-warn');
+  else card.classList.add('kpi-bad');
+}
+
+// ─── Live Region List ─────────────────────────────────────────────────
+function updateRegionList(regions) {
+  const list = document.getElementById('regionList');
+  if (!list || !regions.length) return;
+  list.innerHTML = regions.map(r => {
+    const isNormal = r.status === 'Normal';
+    return `<a href="/regions?region=${encodeURIComponent(r.name)}" class="region-item">
+      <div class="region-info">
+        <div class="region-dot ${isNormal ? 'dot-green' : 'dot-red'}"></div>
+        <div>
+          <div class="region-name">${r.name}</div>
+          <div class="region-meta">${r.latency}ms · ${r.uptime}% uptime</div>
+        </div>
+      </div>
+      <div class="region-badge">
+        <span class="status-badge ${isNormal ? 'badge-normal' : 'badge-degraded'}">${r.status}</span>
+        <i class="bi bi-chevron-right ms-2 text-muted"></i>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+// ─── Initial Chart Render (from REST, then live via WS) ──────────────
+async function loadDashboardData() {
+  try {
+    const resp = await fetch('/dashboard-data');
+    const data = await resp.json();
+
+    animateKpi('kpiLatency', data.avg_latency, 'ms');
+    animateKpi('kpiUptime',  data.avg_uptime,  '%');
+    animateKpi('kpiLoss',    data.avg_packet_loss, '%');
+    document.getElementById('kpiAlerts').textContent = data.active_alerts;
+    document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+
+    colorKpi('kpiLatency', data.avg_latency, 50, 100);
+    colorKpiReverse('kpiUptime', data.avg_uptime, 99, 95);
+    colorKpi('kpiLoss', data.avg_packet_loss, 1, 3);
+
+    renderLatencyChart(data.chart_labels, data.chart_latency);
+    renderUptimeChart(data.chart_labels, data.chart_uptime);
+    loadIspData();
+  } catch(e) { console.error('Dashboard data load error:', e); }
+}
+
+function renderLatencyChart(labels, latency) {
+  const ctx = document.getElementById('latencyChart').getContext('2d');
+  if (latencyChart) latencyChart.destroy();
+  // Pre-populate live buffer with historical data
+  liveLatencyData.labels = labels.slice(-MAX_LIVE_POINTS);
+  liveLatencyData.data   = latency.slice(-MAX_LIVE_POINTS);
+
+  latencyChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [...liveLatencyData.labels],
+      datasets: [{
+        label: 'Avg Latency (ms)',
+        data: [...liveLatencyData.data],
+        borderColor: '#1a73e8',
+        backgroundColor: 'rgba(26,115,232,0.08)',
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.04)' } },
+        y: { beginAtZero: false, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: v => v + 'ms' } }
+      }
+    }
+  });
+}
+
+function renderUptimeChart(labels, uptime) {
+  const ctx = document.getElementById('uptimeChart').getContext('2d');
+  if (uptimeChart) uptimeChart.destroy();
+  uptimeChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Uptime (%)',
+        data: uptime,
+        borderColor: '#34a853',
+        backgroundColor: 'rgba(52,168,83,0.08)',
+        borderWidth: 2.5,
+        fill: true,
+        tension: 0.4,
+        yAxisID: 'y1'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.04)' } },
+        y1: { type: 'linear', position: 'left', min: 80, max: 100, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+}
+
+async function loadIspData() {
+  const resp = await fetch('/api/isp-comparison');
+  const data = await resp.json();
+  const tbody = document.getElementById('ispTableBody');
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No data</td></tr>'; return; }
+  tbody.innerHTML = data.map(isp => {
+    const status = isp.avg_latency < 100 && isp.avg_uptime > 95 ? 'Good' : 'Degraded';
+    const badge = status === 'Good'
+      ? '<span class="status-badge badge-normal">Good</span>'
+      : '<span class="status-badge badge-degraded">Degraded</span>';
+    return `<tr>
+      <td><strong>${isp.isp}</strong></td>
+      <td><span class="metric-val">${isp.avg_latency}ms</span></td>
+      <td><span class="metric-val">${isp.avg_uptime}%</span></td>
+      <td><span class="metric-val">${isp.avg_packet_loss}%</span></td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
+}
+
+function refreshData() { loadDashboardData(); }
+
+loadDashboardData();
+</script>
+{% endblock %}

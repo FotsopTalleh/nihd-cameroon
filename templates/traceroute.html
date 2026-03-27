@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}Traceroute & Path Analysis | NIHD Cameroon{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-fluid px-4">
+    <h1 class="page-title"><i class="bi bi-diagram-3 me-2"></i>Network Path &amp; Traceroute Analysis</h1>
+    <p class="page-sub">Visualize packet routing paths across Cameroon's internet backbone</p>
+  </div>
+</section>
+
+<div class="container-fluid px-4 py-4">
+  <div class="row g-4">
+
+    <!-- Controls -->
+    <div class="col-12">
+      <div class="content-card mb-2">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-search me-2"></i>Traceroute Lookup</h5>
+        </div>
+        <div class="p-3 pt-0">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Source Probe</label>
+              <select class="form-select" id="traceSource">
+                <option value="">– Select Probe –</option>
+                {% for s in sources %}
+                <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Destination</label>
+              <input type="text" class="form-control" id="traceDest" placeholder="Enter IP/Host or Select Target" list="destList" />
+              <datalist id="destList">
+                {% for d in destinations %}
+                <option value="{{ d }}">{{ d }}</option>
+                {% endfor %}
+              </datalist>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-primary w-100" id="runTrace" onclick="loadTrace()">
+                <i class="bi bi-play-circle me-2"></i>Run Trace
+              </button>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-outline-secondary w-100" onclick="loadLatestTrace()">
+                <i class="bi bi-clock-history me-2"></i>Load Latest
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visual Hop Path -->
+    <div class="col-12">
+      <div class="content-card mb-4" id="traceVisCard" style="display:none">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-diagram-2 me-2"></i>Network Path Visualization</h5>
+          <div id="tracePathLabel" class="text-muted small"></div>
+        </div>
+        <div class="trace-hops-container" id="traceHopsViz">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Hop Table -->
+    <div class="col-12">
+      <div class="content-card mb-4" id="hopTableCard" style="display:none">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-table me-2"></i>Detailed Hop List Table</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table nihd-table" id="hopTable">
+            <thead>
+              <tr>
+                <th>Hop #</th>
+                <th>IP Address / Hostname</th>
+                <th>AS Number</th>
+                <th>Location</th>
+                <th>Latency (ms)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="hopTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Traceroutes -->
+    <div class="col-12">
+      <div class="content-card">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-clock-history me-2"></i>Recent Traceroutes</h5>
+        </div>
+        <div class="table-responsive">
+          <table class="table nihd-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Source</th>
+                <th>Destination</th>
+                <th>Hops</th>
+                <th>Total Latency</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in recent_traces %}
+              <tr>
+                <td class="text-muted small">{{ t.timestamp[:16] if t.timestamp else '' }}</td>
+                <td>{{ t.source }}</td>
+                <td>{{ t.destination }}</td>
+                <td><span class="badge bg-secondary">{{ t.total_hops }}</span></td>
+                <td>{{ t.total_latency }}ms</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary"
+                          onclick="displayTrace({{ t | tojson | safe }})">
+                    <i class="bi bi-eye me-1"></i>View
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const recentTraces = {{ recent_traces | tojson }};
+
+function displayTrace(trace) {
+  document.getElementById('traceVisCard').style.display = '';
+  document.getElementById('hopTableCard').style.display = '';
+  document.getElementById('tracePathLabel').textContent =
+    `${trace.source} → ${trace.destination}  |  ${trace.total_hops} hops  |  ${trace.total_latency}ms`;
+
+  // Render visual hops
+  const hopsViz = document.getElementById('traceHopsViz');
+  const hops = trace.hops || [];
+  if (!hops.length) { hopsViz.innerHTML = '<p class="text-muted p-3">No hop data.</p>'; return; }
+
+  let html = '<div class="hop-path">';
+  hops.forEach((hop, i) => {
+    const isFirst = i === 0, isLast = i === hops.length - 1;
+    const colorClass = hop.latency < 50 ? 'hop-green' : hop.latency < 150 ? 'hop-orange' : 'hop-red';
+    html += `
+      <div class="hop-node ${colorClass}">
+        <div class="hop-num">${hop.hop}</div>
+        <div class="hop-ip">${hop.ip}</div>
+        <div class="hop-latency">${hop.latency}ms</div>
+        <div class="hop-loc">${hop.location || ''}</div>
+      </div>`;
+    if (!isLast) html += '<div class="hop-arrow"><i class="bi bi-arrow-right"></i></div>';
+  });
+  html += '</div>';
+  hopsViz.innerHTML = html;
+
+  // Render hop table
+  const tbody = document.getElementById('hopTableBody');
+  tbody.innerHTML = hops.map(hop => {
+    const statusBadge = hop.status === 'OK'
+      ? '<span class="status-badge badge-normal">OK</span>'
+      : '<span class="status-badge badge-degraded">SLOW</span>';
+    return `<tr>
+      <td>${hop.hop}</td>
+      <td><code>${hop.ip}</code><br><small class="text-muted">${hop.hostname || ''}</small></td>
+      <td><span class="badge bg-secondary">${hop.as_number || 'N/A'}</span></td>
+      <td>${hop.location || '–'}</td>
+      <td><span class="fw-semibold">${hop.latency}ms</span></td>
+      <td>${statusBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadTrace() {
+  const source = document.getElementById('traceSource').value;
+  const dest = document.getElementById('traceDest').value;
+  if (!source && !dest) { alert('Please select a source or destination.'); return; }
+
+  const url = `/api/traceroutes?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(dest)}`;
+  const resp = await fetch(url);
+  const data = await resp.json();
+  if (data.length) displayTrace(data[0]);
+  else alert('No matching traceroute found. Try loading the latest.');
+}
+
+function loadLatestTrace() {
+  if (recentTraces.length) displayTrace(recentTraces[0]);
+}
+
+// Load latest on page load
+if (recentTraces.length) loadLatestTrace();
+</script>
+{% endblock %}

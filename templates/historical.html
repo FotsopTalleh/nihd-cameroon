@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}Historical Internet Performance Trends | NIHD Cameroon{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-fluid px-4">
+    <div class="row align-items-center">
+      <div class="col-md-7">
+        <h1 class="page-title"><i class="bi bi-graph-up-arrow me-2"></i>Historical Internet Performance</h1>
+        <p class="page-sub">Long-term trends in latency, uptime, and packet loss across Cameroon</p>
+      </div>
+      <div class="col-md-5">
+        <div class="d-flex gap-2 justify-content-md-end align-items-center flex-wrap">
+          <div class="btn-group" role="group" id="periodBtns">
+            <button class="btn btn-sm btn-outline-primary active" onclick="setPeriod(7, this)">Weekly</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="setPeriod(30, this)">Monthly</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="setPeriod(90, this)">Quarterly</button>
+          </div>
+          <select class="form-select form-select-sm w-auto" id="compareSelect" onchange="loadHistorical()">
+            <option value="">Select Region</option>
+            {% for r in regions %}
+            <option value="{{ r }}">{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container-fluid px-4 py-4">
+  <div class="row g-4">
+
+    <!-- Long-Term Latency Trend -->
+    <div class="col-lg-6">
+      <div class="content-card">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-speedometer me-2"></i>Long-Term Latency Trend</h5>
+          <span class="badge bg-primary" id="latBadge">All Regions</span>
+        </div>
+        <div class="chart-container chart-tall">
+          <canvas id="histLatencyChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Long-Term Uptime Trend -->
+    <div class="col-lg-6">
+      <div class="content-card">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-activity me-2"></i>Long-Term Uptime Trend</h5>
+          <span class="badge bg-success" id="upBadge">All Regions</span>
+        </div>
+        <div class="chart-container chart-tall">
+          <canvas id="histUptimeChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Packet Loss Heatmap-style Chart -->
+    <div class="col-12">
+      <div class="content-card">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-reception-0 me-2"></i>Packet Loss Over Time</h5>
+        </div>
+        <div class="chart-container">
+          <canvas id="histLossChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regional Comparison -->
+    <div class="col-12">
+      <div class="content-card">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-bar-chart-grouped me-2"></i>Regional Latency Comparison</h5>
+        </div>
+        <div class="chart-container">
+          <canvas id="regionCompareChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentPeriodHours = 168; // 7 days
+let histLatChart, histUpChart, histLossChart, regionCompChart;
+const COLORS = [
+  '#1a73e8','#34a853','#ea4335','#fbbc04','#9c27b0',
+  '#ff6722','#00bcd4','#607d8b','#e91e63','#4caf50'
+];
+const REGIONS = {{ regions | tojson }};
+
+function setPeriod(days, btn) {
+  currentPeriodHours = days * 24;
+  document.querySelectorAll('#periodBtns .btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadHistorical();
+}
+
+async function loadHistorical() {
+  const region = document.getElementById('compareSelect').value;
+  const hours = currentPeriodHours;
+
+  // Build bucket labels (daily)
+  const now = new Date();
+  const days = Math.floor(hours / 24);
+  const labels = [];
+  for (let i = days; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    labels.push(d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }));
+  }
+
+  // Fetch data for all regions or selected region
+  const promises = region
+    ? [fetch(`/api/region-data?region=${encodeURIComponent(region)}&hours=${hours}`).then(r => r.json())]
+    : REGIONS.slice(0, 5).map(r =>
+        fetch(`/api/region-data?region=${encodeURIComponent(r)}&hours=${hours}`).then(res => res.json())
+      );
+
+  const allData = await Promise.all(promises);
+  const regionNames = region ? [region] : REGIONS.slice(0, 5);
+
+  // Build per-region daily aggregates
+  function aggregate(data, metric) {
+    const buckets = {};
+    data.forEach(m => {
+      const d = new Date(m.timestamp);
+      const key = d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+      if (!buckets[key]) buckets[key] = [];
+      buckets[key].push(m[metric]);
+    });
+    return labels.map(l => {
+      const vals = buckets[l];
+      return vals && vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) : null;
+    });
+  }
+
+  // Latency chart
+  if (histLatChart) histLatChart.destroy();
+  histLatChart = new Chart(document.getElementById('histLatencyChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: allData.map((data, i) => ({
+        label: regionNames[i],
+        data: aggregate(data, 'latency'),
+        borderColor: COLORS[i],
+        backgroundColor: COLORS[i] + '15',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: false,
+        pointRadius: 2,
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.04)' } },
+        y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: v => v + 'ms' } }
+      }
+    }
+  });
+  document.getElementById('latBadge').textContent = region || 'Top 5 Regions';
+
+  // Uptime chart
+  if (histUpChart) histUpChart.destroy();
+  histUpChart = new Chart(document.getElementById('histUptimeChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: allData.map((data, i) => ({
+        label: regionNames[i],
+        data: aggregate(data, 'uptime'),
+        borderColor: COLORS[i],
+        backgroundColor: COLORS[i] + '10',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointRadius: 2,
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.04)' } },
+        y: { min: 85, max: 100, ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+  document.getElementById('upBadge').textContent = region || 'Top 5 Regions';
+
+  // Packet loss chart
+  if (histLossChart) histLossChart.destroy();
+  histLossChart = new Chart(document.getElementById('histLossChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: allData.map((data, i) => ({
+        label: regionNames[i],
+        data: aggregate(data, 'packet_loss'),
+        backgroundColor: COLORS[i] + 'cc',
+        borderRadius: 3,
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { stacked: false },
+        y: { beginAtZero: true, ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+
+  // Regional latency comparison bar chart (latest avg)
+  const regionAvgs = await Promise.all(
+    REGIONS.map(r => fetch(`/api/region-data?region=${encodeURIComponent(r)}&hours=24`).then(res => res.json()))
+  );
+
+  if (regionCompChart) regionCompChart.destroy();
+  regionCompChart = new Chart(document.getElementById('regionCompareChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: REGIONS,
+      datasets: [{
+        label: 'Avg Latency (ms) – Last 24h',
+        data: regionAvgs.map(d => {
+          if (!d.length) return 0;
+          const avg = d.reduce((s, m) => s + m.latency, 0) / d.length;
+          return +avg.toFixed(1);
+        }),
+        backgroundColor: REGIONS.map((_, i) => COLORS[i % COLORS.length] + 'cc'),
+        borderColor: REGIONS.map((_, i) => COLORS[i % COLORS.length]),
+        borderWidth: 1,
+        borderRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, ticks: { callback: v => v + 'ms' } }
+      }
+    }
+  });
+}
+
+loadHistorical();
+</script>
+{% endblock %}

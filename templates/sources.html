@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Data Sources & Methodology | NIHD Cameroon{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-fluid px-4">
+    <h1 class="page-title"><i class="bi bi-database me-2"></i>Data Sources &amp; Methodology</h1>
+    <p class="page-sub">Transparency in how we collect, process, and present internet performance data</p>
+  </div>
+</section>
+
+<div class="container-fluid px-4 py-4">
+  <div class="row g-4">
+
+    <div class="col-lg-8">
+
+      <!-- Accordion -->
+      <div class="accordion nihd-accordion" id="methodAccordion">
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#c1">
+              <i class="bi bi-pin-map me-2 text-primary"></i>1. Where the Data Comes From
+            </button>
+          </h2>
+          <div id="c1" class="accordion-collapse collapse show" data-bs-parent="#methodAccordion">
+            <div class="accordion-body">
+              <p>Probe data comes from lightweight agents deployed across Cameroon. Each agent continuously performs:</p>
+              <ul>
+                <li><strong>ICMP Ping tests</strong> — measures round-trip latency and packet loss</li>
+                <li><strong>TCP connection tests</strong> — validates HTTP/S connectivity to key endpoints</li>
+                <li><strong>Traceroute analysis</strong> — maps routing paths and identifies bottlenecks</li>
+                <li><strong>Download/Upload speed tests</strong> — via standardized reference servers</li>
+              </ul>
+              <p class="text-muted small mb-0">Data is collected every <strong>2 hours</strong> from probe agents located in each of the 10 regions.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#c2">
+              <i class="bi bi-cpu me-2 text-success"></i>2. Data Collection Pipeline
+            </button>
+          </h2>
+          <div id="c2" class="accordion-collapse collapse" data-bs-parent="#methodAccordion">
+            <div class="accordion-body">
+              <div class="pipeline-diagram">
+                <div class="pipe-step">
+                  <div class="pipe-icon bg-primary text-white"><i class="bi bi-broadcast"></i></div>
+                  <div class="pipe-label">Probes<br><small>(Raw Data)</small></div>
+                </div>
+                <div class="pipe-arrow"><i class="bi bi-arrow-right"></i></div>
+                <div class="pipe-step">
+                  <div class="pipe-icon bg-info text-white"><i class="bi bi-server"></i></div>
+                  <div class="pipe-label">Ingestion<br><small>Server</small></div>
+                </div>
+                <div class="pipe-arrow"><i class="bi bi-arrow-right"></i></div>
+                <div class="pipe-step">
+                  <div class="pipe-icon bg-success text-white"><i class="bi bi-sliders"></i></div>
+                  <div class="pipe-label">Processing/<br><small>Aggregation</small></div>
+                </div>
+                <div class="pipe-arrow"><i class="bi bi-arrow-right"></i></div>
+                <div class="pipe-step">
+                  <div class="pipe-icon bg-purple text-white"><i class="bi bi-database"></i></div>
+                  <div class="pipe-label">Database<br><small>(SQLite)</small></div>
+                </div>
+                <div class="pipe-arrow"><i class="bi bi-arrow-right"></i></div>
+                <div class="pipe-step">
+                  <div class="pipe-icon bg-warning text-dark"><i class="bi bi-speedometer2"></i></div>
+                  <div class="pipe-label">Public<br><small>Dashboard</small></div>
+                </div>
+              </div>
+              <p class="text-muted small mb-0 mt-3">All raw measurements are stored in SQLite. Aggregated metrics (hourly averages) are computed on read for dashboard display.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#c3">
+              <i class="bi bi-shield-check me-2 text-warning"></i>3. Limitations &amp; Disclaimer
+            </button>
+          </h2>
+          <div id="c3" class="accordion-collapse collapse" data-bs-parent="#methodAccordion">
+            <div class="accordion-body">
+              <div class="alert alert-warning border-0">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Important:</strong> Data provided by NIHD is for informational and research purposes only.
+              </div>
+              <ul>
+                <li>Measurements represent <strong>probe agent observations</strong>, not the full national network picture.</li>
+                <li>Latency values are affected by distance to measurement targets.</li>
+                <li>ISP performance data may not account for local peering arrangements.</li>
+                <li>This data should <strong>not</strong> be used for SLA enforcement or regulatory proceedings.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#c4">
+              <i class="bi bi-code-slash me-2 text-info"></i>4. API Access
+            </button>
+          </h2>
+          <div id="c4" class="accordion-collapse collapse" data-bs-parent="#methodAccordion">
+            <div class="accordion-body">
+              <p>Raw data is accessible via the NIHD REST API:</p>
+              <table class="table nihd-table nihd-table-sm">
+                <thead>
+                  <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>/dashboard-data</code></td><td><span class="badge bg-success">GET</span></td><td>Aggregated national stats (last 24h)</td></tr>
+                  <tr><td><code>/api/region-data</code></td><td><span class="badge bg-success">GET</span></td><td>Per-region measurements</td></tr>
+                  <tr><td><code>/api/alerts-data</code></td><td><span class="badge bg-success">GET</span></td><td>Alert events with filters</td></tr>
+                  <tr><td><code>/api/traceroutes</code></td><td><span class="badge bg-success">GET</span></td><td>Traceroute path data</td></tr>
+                  <tr><td><code>/api/isp-comparison</code></td><td><span class="badge bg-success">GET</span></td><td>ISP performance comparison</td></tr>
+                  <tr><td><code>/submit/ping</code></td><td><span class="badge bg-primary">POST</span></td><td>Submit measurement from probe</td></tr>
+                  <tr><td><code>/submit/traceroute</code></td><td><span class="badge bg-primary">POST</span></td><td>Submit traceroute result</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-bar-chart me-2"></i>Coverage Stats</h5>
+        </div>
+        <div class="p-3 pt-0">
+          <div class="coverage-stat">
+            <span class="cs-label">Regions Monitored</span>
+            <span class="cs-val text-primary fw-bold">10</span>
+          </div>
+          <div class="coverage-stat">
+            <span class="cs-label">ISPs Tracked</span>
+            <span class="cs-val text-success fw-bold">4</span>
+          </div>
+          <div class="coverage-stat">
+            <span class="cs-label">Data Refresh Rate</span>
+            <span class="cs-val">Every 2 Hours</span>
+          </div>
+          <div class="coverage-stat">
+            <span class="cs-label">Data Retention</span>
+            <span class="cs-val">30 Days</span>
+          </div>
+          <div class="coverage-stat">
+            <span class="cs-label">Alert Detection</span>
+            <span class="cs-val">Automated</span>
+          </div>
+          <div class="coverage-stat">
+            <span class="cs-label">Data Format</span>
+            <span class="cs-val">CSV / PDF</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-wifi me-2"></i>ISPs Monitored</h5>
+        </div>
+        <div class="p-3 pt-0">
+          {% for isp in ['Camtel', 'MTN Cameroon', 'Orange Cameroon', 'Nexttel'] %}
+          <div class="isp-tag-row">
+            <div class="isp-dot"></div>
+            <span>{{ isp }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Register | National Internet Health Dashboard{% endblock %}
+{% block meta_desc %}Create an account to download internet performance data reports from NIHD Cameroon.{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card-wrapper auth-card-wide">
+
+    <div class="auth-brand text-center mb-4">
+      <div class="auth-brand-icon">
+        <i class="bi bi-broadcast"></i>
+      </div>
+      <h2 class="auth-brand-title">National Internet Health Dashboard</h2>
+      <p class="auth-brand-sub">Create your free account</p>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <h3><i class="bi bi-person-plus me-2"></i>Create Account</h3>
+        <p class="text-muted small mb-0">
+          Register to access data downloads, PDF reports, and CSV exports.
+        </p>
+      </div>
+
+      <div class="auth-card-body">
+        <form method="POST" action="{{ url_for('auth.register') }}" id="registerForm" novalidate>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="full_name" class="form-label fw-semibold">Full Name</label>
+              <div class="input-group input-group-auth">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="text" id="full_name" name="full_name" class="form-control"
+                       placeholder="Jean Dupont"
+                       value="{{ full_name or '' }}" />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="organization" class="form-label fw-semibold">Organization <span class="text-muted fw-normal">(optional)</span></label>
+              <div class="input-group input-group-auth">
+                <span class="input-group-text"><i class="bi bi-building"></i></span>
+                <input type="text" id="organization" name="organization" class="form-control"
+                       placeholder="University, Company, etc."
+                       value="{{ organization or '' }}" />
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="email" class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+            <div class="input-group input-group-auth">
+              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+              <input type="email" id="email" name="email" class="form-control"
+                     placeholder="you@example.com"
+                     value="{{ email or '' }}"
+                     required autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label for="password" class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+              <div class="input-group input-group-auth">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" id="password" name="password" class="form-control"
+                       placeholder="Min. 8 characters" required
+                       oninput="checkStrength(this.value)"
+                       autocomplete="new-password" />
+                <button class="btn btn-outline-secondary" type="button"
+                        onclick="togglePassword('password', this)">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              <div class="password-strength mt-1">
+                <div class="strength-bar">
+                  <div class="strength-fill" id="strengthFill"></div>
+                </div>
+                <small id="strengthLabel" class="text-muted">Enter a password</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="confirm_password" class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+              <div class="input-group input-group-auth">
+                <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                       placeholder="Repeat password" required
+                       autocomplete="new-password" />
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-4 form-check">
+            <input type="checkbox" class="form-check-input" id="agree" required />
+            <label class="form-check-label text-muted small" for="agree">
+              I understand that downloaded data is for research and informational purposes only.
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-auth w-100" id="registerBtn">
+            <span class="btn-text"><i class="bi bi-person-check me-2"></i>Create Account</span>
+            <span class="btn-spinner d-none">
+              <span class="spinner-border spinner-border-sm me-2"></span>Creating account...
+            </span>
+          </button>
+        </form>
+
+        <div class="auth-divider"><span>or</span></div>
+
+        <div class="text-center">
+          <p class="text-muted mb-1">Already have an account?</p>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-auth w-100">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-muted small mt-3">
+      <a href="{{ url_for('dashboard.index') }}">← Return to Dashboard</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePassword(fieldId, btn) {
+  const field = document.getElementById(fieldId);
+  const icon = btn.querySelector('i');
+  if (field.type === 'password') {
+    field.type = 'text';
+    icon.classList.replace('bi-eye', 'bi-eye-slash');
+  } else {
+    field.type = 'password';
+    icon.classList.replace('bi-eye-slash', 'bi-eye');
+  }
+}
+
+function checkStrength(val) {
+  const fill = document.getElementById('strengthFill');
+  const label = document.getElementById('strengthLabel');
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+
+  const levels = [
+    { pct: '0%',   color: '#ea4335', text: 'Too short' },
+    { pct: '25%',  color: '#ea4335', text: 'Weak' },
+    { pct: '50%',  color: '#fbbc04', text: 'Fair' },
+    { pct: '75%',  color: '#34a853', text: 'Good' },
+    { pct: '100%', color: '#1a73e8', text: 'Strong' },
+  ];
+  const level = levels[Math.min(score, 4)];
+  fill.style.width = level.pct;
+  fill.style.background = level.color;
+  label.textContent = level.text;
+  label.style.color = level.color;
+}
+
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+  const pw = document.getElementById('password').value;
+  const cfm = document.getElementById('confirm_password').value;
+  const agree = document.getElementById('agree').checked;
+
+  if (pw !== cfm) {
+    e.preventDefault();
+    alert('Passwords do not match.');
+    return;
+  }
+  if (!agree) {
+    e.preventDefault();
+    alert('Please agree to the terms of use.');
+    return;
+  }
+  document.querySelector('.btn-text').classList.add('d-none');
+  document.querySelector('.btn-spinner').classList.remove('d-none');
+});
+</script>
+{% endblock %}

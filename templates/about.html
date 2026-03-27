@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}About the Project | NIHD Cameroon{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-fluid px-4">
+    <h1 class="page-title"><i class="bi bi-info-circle me-2"></i>About the Project</h1>
+    <p class="page-sub">Understanding the mission, goals, and future of the National Internet Health Dashboard</p>
+  </div>
+</section>
+
+<div class="container-fluid px-4 py-4">
+  <div class="row g-4">
+
+    <div class="col-lg-8">
+
+      <!-- Problem -->
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-bullseye me-2 text-danger"></i>The Problem</h5>
+        </div>
+        <div class="p-3 pt-0">
+          <p>
+            Cameroon faces significant internet connectivity challenges — from infrastructure gaps in
+            northern regions to inconsistent ISP performance in urban centres. Until now, there has been
+            no centralized, publicly accessible platform for monitoring national internet health.
+          </p>
+          <p class="mb-0 text-muted">
+            Citizens, businesses, researchers, and regulators have lacked the data needed to make
+            informed decisions about connectivity, investments, and policy.
+          </p>
+        </div>
+      </div>
+
+      <!-- Objectives -->
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-trophy me-2 text-warning"></i>Project Objectives</h5>
+        </div>
+        <div class="p-3 pt-0">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="objective-card">
+                <div class="obj-icon text-primary"><i class="bi bi-broadcast"></i></div>
+                <div class="obj-title">Real-time Monitoring</div>
+                <div class="obj-desc">Continuously measure latency, uptime, and packet loss across all 10 regions of Cameroon.</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="objective-card">
+                <div class="obj-icon text-success"><i class="bi bi-graph-up"></i></div>
+                <div class="obj-title">Identify Bottlenecks</div>
+                <div class="obj-desc">Detect and report performance degradation, routing anomalies, and ISP-level issues promptly.</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="objective-card">
+                <div class="obj-icon text-info"><i class="bi bi-people"></i></div>
+                <div class="obj-title">Inform Stakeholders</div>
+                <div class="obj-desc">Provide actionable data to citizens, businesses, policymakers, and regulators.</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="objective-card">
+                <div class="obj-icon text-warning"><i class="bi bi-shield-check"></i></div>
+                <div class="obj-title">Promote Accountability</div>
+                <div class="obj-desc">Hold ISPs accountable through transparent, independent performance benchmarking.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Target Users -->
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-people me-2 text-info"></i>Target Users</h5>
+        </div>
+        <div class="p-3 pt-0">
+          <div class="user-group-list">
+            <div class="user-group-item">
+              <i class="bi bi-person-badge text-primary"></i>
+              <div>
+                <strong>Regulators &amp; Policymakers</strong>
+                <p class="text-muted small mb-0">Use data to formulate evidence-based internet policy and licensing decisions.</p>
+              </div>
+            </div>
+            <div class="user-group-item">
+              <i class="bi bi-building text-success"></i>
+              <div>
+                <strong>ISPs &amp; Telecoms</strong>
+                <p class="text-muted small mb-0">Benchmark performance and identify network improvement opportunities.</p>
+              </div>
+            </div>
+            <div class="user-group-item">
+              <i class="bi bi-mortarboard text-warning"></i>
+              <div>
+                <strong>Researchers &amp; Academia</strong>
+                <p class="text-muted small mb-0">Download raw datasets for academic research and network analysis studies.</p>
+              </div>
+            </div>
+            <div class="user-group-item">
+              <i class="bi bi-person text-info"></i>
+              <div>
+                <strong>General Public</strong>
+                <p class="text-muted small mb-0">Understand internet quality in their region and compare ISP offerings.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Future Roadmap -->
+      <div class="content-card">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-map me-2 text-purple"></i>Future Roadmap</h5>
+        </div>
+        <div class="p-3 pt-0">
+          <div class="roadmap">
+            <div class="roadmap-item done">
+              <div class="rm-dot"></div>
+              <div class="rm-content">
+                <div class="rm-title">Phase 1 – Core Dashboard</div>
+                <div class="rm-desc text-muted small">Public monitoring, multi-region support, ISP comparison ✓</div>
+              </div>
+            </div>
+            <div class="roadmap-item done">
+              <div class="rm-dot"></div>
+              <div class="rm-content">
+                <div class="rm-title">Phase 2 – Data Access</div>
+                <div class="rm-desc text-muted small">Authenticated downloads, PDF/CSV reports, download history ✓</div>
+              </div>
+            </div>
+            <div class="roadmap-item active">
+              <div class="rm-dot rm-active"></div>
+              <div class="rm-content">
+                <div class="rm-title">Phase 3 – Mobile Integration</div>
+                <div class="rm-desc text-muted small">Progressive Web App (PWA) support, mobile monitoring app ⏳</div>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="rm-dot rm-future"></div>
+              <div class="rm-content">
+                <div class="rm-title">Phase 4 – API Access</div>
+                <div class="rm-desc text-muted small">Open API with rate limiting for third-party integrations</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <!-- Tech Stack -->
+      <div class="content-card mb-4">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-code-slash me-2"></i>Technology Stack</h5>
+        </div>
+        <div class="p-3 pt-0">
+          {% set stack = [
+            ('bi-hdd-stack', 'Flask (Python)', 'Backend framework', 'text-primary'),
+            ('bi-database', 'SQLite + SQLAlchemy', 'Database & ORM', 'text-success'),
+            ('bi-table', 'Pandas', 'Data processing', 'text-warning'),
+            ('bi-bootstrap', 'Bootstrap 5', 'Frontend UI', 'text-info'),
+            ('bi-bar-chart', 'Chart.js', 'Data visualization', 'text-danger'),
+            ('bi-file-earmark-pdf', 'ReportLab', 'PDF generation', 'text-purple'),
+          ] %}
+          {% for icon, name, desc, color in stack %}
+          <div class="tech-stack-item">
+            <i class="bi {{ icon }} {{ color }} fs-5"></i>
+            <div>
+              <div class="fw-semibold">{{ name }}</div>
+              <div class="text-muted small">{{ desc }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="content-card">
+        <div class="card-header-nihd">
+          <h5 class="card-title-nihd"><i class="bi bi-envelope me-2"></i>Contact &amp; Feedback</h5>
+        </div>
+        <div class="p-3 pt-0">
+          <p class="text-muted small mb-3">
+            Questions, data issues, or partnership inquiries? We'd love to hear from you.
+          </p>
+          <div class="d-grid gap-2">
+            <a href="mailto:contact@nihd.cm" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-envelope me-2"></i>contact@nihd.cm
+            </a>
+            <a href="{{ url_for('dashboard.sources') }}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-database me-2"></i>View Methodology
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

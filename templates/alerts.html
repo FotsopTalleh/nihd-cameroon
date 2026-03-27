@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}Network Alerts & Events | NIHD Cameroon{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container-fluid px-4">
+    <h1 class="page-title"><i class="bi bi-bell me-2"></i>Network Alerts &amp; Events</h1>
+    <p class="page-sub">Real-time incident monitoring and anomaly detection across all regions</p>
+  </div>
+</section>
+
+<div class="container-fluid px-4 py-4">
+
+  <!-- Alert Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="alert-summary-card alert-critical">
+        <div class="as-icon"><i class="bi bi-exclamation-octagon-fill"></i></div>
+        <div class="as-info">
+          <div class="as-count">{{ counts.critical }}</div>
+          <div class="as-label">Critical Alerts</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="alert-summary-card alert-warning">
+        <div class="as-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="as-info">
+          <div class="as-count">{{ counts.warning }}</div>
+          <div class="as-label">Warning Alerts</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="alert-summary-card alert-info">
+        <div class="as-icon"><i class="bi bi-info-circle-fill"></i></div>
+        <div class="as-info">
+          <div class="as-count">{{ counts.info }}</div>
+          <div class="as-label">Informational</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="content-card mb-4">
+    <div class="p-3">
+      <form method="GET" class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Filter by Region</label>
+          <select name="region" class="form-select form-select-sm">
+            <option value="">All Regions</option>
+            {% for r in regions %}
+            <option value="{{ r }}" {% if r == selected_region %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Filter by Severity</label>
+          <select name="severity" class="form-select form-select-sm">
+            <option value="">All Severity</option>
+            <option value="critical" {% if selected_severity == 'critical' %}selected{% endif %}>Critical</option>
+            <option value="warning"  {% if selected_severity == 'warning'  %}selected{% endif %}>Warning</option>
+            <option value="info"     {% if selected_severity == 'info'     %}selected{% endif %}>Info</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Show Resolved</label>
+          <select name="resolved" class="form-select form-select-sm">
+            <option value="false" {% if show_resolved == 'false' %}selected{% endif %}>Active Only</option>
+            <option value="true"  {% if show_resolved == 'true'  %}selected{% endif %}>All Alerts</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button type="submit" class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-funnel me-2"></i>Apply Filters
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Alerts Table -->
+  <div class="content-card">
+    <div class="card-header-nihd">
+      <h5 class="card-title-nihd"><i class="bi bi-table me-2"></i>Alerts Table</h5>
+      <span class="text-muted small">{{ alerts.total }} total alerts</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table nihd-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Region</th>
+            <th>Alert Type</th>
+            <th>Severity</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for alert in alerts.items %}
+          <tr class="alert-row {% if alert.severity == 'critical' %}alert-row-critical{% elif alert.severity == 'warning' %}alert-row-warning{% endif %}">
+            <td class="text-muted small">{{ alert.timestamp.strftime('%Y-%m-%d %H:%M') if alert.timestamp else '' }}</td>
+            <td>{{ alert.region }}</td>
+            <td>
+              <strong>{{ alert.type }}</strong>
+              {% if alert.message %}
+              <div class="text-muted small">{{ alert.message[:80] }}</div>
+              {% endif %}
+            </td>
+            <td>
+              {% if alert.severity == 'critical' %}
+                <span class="badge bg-danger">Critical</span>
+              {% elif alert.severity == 'warning' %}
+                <span class="badge bg-warning text-dark">Warning</span>
+              {% else %}
+                <span class="badge bg-info text-dark">Info</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if alert.is_resolved %}
+                <span class="status-badge badge-normal">Resolved</span>
+              {% else %}
+                <span class="status-badge badge-degraded">Active</span>
+              {% endif %}
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-secondary"
+                      onclick="showAlertDetail('{{ alert.type }}','{{ alert.region }}','{{ alert.message or '' }}','{{ alert.timestamp.strftime('%Y-%m-%d %H:%M') if alert.timestamp else '' }}','{{ alert.severity }}')">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
+              No alerts matching the selected filters.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if alerts.pages > 1 %}
+    <div class="p-3 border-top">
+      <nav>
+        <ul class="pagination pagination-sm justify-content-center mb-0">
+          {% if alerts.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ alerts.prev_num }}&severity={{ selected_severity }}&region={{ selected_region }}&resolved={{ show_resolved }}">
+              &laquo; Prev
+            </a>
+          </li>
+          {% endif %}
+          {% for p in alerts.iter_pages() %}
+            {% if p %}
+            <li class="page-item {% if p == alerts.page %}active{% endif %}">
+              <a class="page-link" href="?page={{ p }}&severity={{ selected_severity }}&region={{ selected_region }}&resolved={{ show_resolved }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+          {% endfor %}
+          {% if alerts.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ alerts.next_num }}&severity={{ selected_severity }}&region={{ selected_region }}&resolved={{ show_resolved }}">
+              Next &raquo;
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Alert Detail Modal -->
+<div class="modal fade" id="alertModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="alertModalTitle">Alert Detail</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="alertModalBody"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showAlertDetail(type, region, message, timestamp, severity) {
+  document.getElementById('alertModalTitle').textContent = type;
+  const sevBadge = severity === 'critical'
+    ? '<span class="badge bg-danger">Critical</span>'
+    : severity === 'warning'
+      ? '<span class="badge bg-warning text-dark">Warning</span>'
+      : '<span class="badge bg-info text-dark">Info</span>';
+
+  document.getElementById('alertModalBody').innerHTML = `
+    <div class="mb-3"><strong>Severity:</strong> ${sevBadge}</div>
+    <div class="mb-3"><strong>Region:</strong> ${region}</div>
+    <div class="mb-3"><strong>Timestamp:</strong> ${timestamp}</div>
+    <div class="mb-3"><strong>Message:</strong><br><span class="text-muted">${message || 'No additional message.'}</span></div>
+  `;
+  new bootstrap.Modal(document.getElementById('alertModal')).show();
+}
+</script>
+{% endblock %}
