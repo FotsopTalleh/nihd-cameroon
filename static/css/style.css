@@ -851,6 +851,105 @@ code { color: var(--blue); background: var(--blue-light); padding: 1px 5px; bord
 }
 
 /* =========================================================
+   MOBILE HAMBURGER MENU — COLLAPSED NAVBAR
+   ========================================================= */
+@media (max-width: 991.98px) {
+  /* Give the expanded collapse panel a solid dark background */
+  .navbar-nihd .navbar-collapse {
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0 0 12px 12px;
+    padding: 12px 16px 16px;
+    margin: 0 -16px;           /* stretch edge-to-edge under the brand row */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Stack nav items vertically with a little breathing room */
+  .navbar-nihd .navbar-nav {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+    width: 100%;
+  }
+
+  /* Make each nav-item full-width */
+  .navbar-nihd .nav-item {
+    width: 100%;
+  }
+
+  /* Nav links: full-width, clearly visible */
+  .navbar-nihd .nav-link {
+    display: flex !important;
+    align-items: center;
+    width: 100%;
+    padding: 10px 14px !important;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 14px !important;
+  }
+
+  .navbar-nihd .nav-link:hover,
+  .navbar-nihd .nav-link.active {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+  }
+
+  /* Horizontal separator → horizontal divider line */
+  .nav-separator {
+    width: 100% !important;
+    height: 1px !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    margin: 8px 0 !important;
+    align-self: auto !important;
+  }
+
+  /* Login / Register buttons: full-width */
+  .btn-nav-login,
+  .btn-nav-register {
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+  }
+
+  /* User dropdown button: full-width */
+  .nav-user-btn {
+    width: 100%;
+    display: flex !important;
+    align-items: center;
+  }
+
+  /* Dropdown menu opened inside mobile menu */
+  .navbar-nihd .dropdown-menu {
+    position: static !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+    padding: 4px !important;
+    margin-top: 4px !important;
+    width: 100%;
+  }
+
+  .navbar-nihd .dropdown-item {
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-radius: 6px;
+  }
+
+  .navbar-nihd .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+  }
+
+  .navbar-nihd .dropdown-item.text-danger {
+    color: #f28b82 !important;
+  }
+
+  .navbar-nihd .dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+  }
+}
+
+/* =========================================================
    PROBE STATUS BAR
    ========================================================= */
 .probe-status-bar {
